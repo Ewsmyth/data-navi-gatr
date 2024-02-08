@@ -92,9 +92,9 @@ class QueryPackage(tk.Frame):
             reader = csv.reader(file)
             header = next(reader)  # Read the header
             for row in reader:
-                up_time_str = row[20]  # Assuming "up_time" is at index 20
+                up_time_str = row[18]  # Assuming "up_time" is at index 20
                 if up_time_str:
-                    up_time = datetime.strptime(up_time_str, "%Y-%m-%d %H:%M:%S")
+                    up_time = datetime.strptime(up_time_str, "%Y-%m-%d %H:%M:%S.%f")
                     if start_datetime <= up_time <= end_datetime:
                         filtered_rows.append(row)
                 else:

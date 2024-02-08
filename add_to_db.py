@@ -59,7 +59,7 @@ class AddToDb(tk.Frame):
         master_exists = os.path.exists(master_database_path)
 
         # Predetermined header for the master_database.csv file
-        predetermined_header = "tx_user_id,tx_username,event_type,post_id,rx_user_id,rx_username,content_txt,media,user_email,password,first_name,last_name,authority,acct_stat,address,phone,card_number,card_holder,card_ex_date,card_cvv,up_time,initial_time,trsid\n"  # Modify this as per your column names
+        predetermined_header = "tx_id,tx_id2,event,content_id,rx_id,rx_id2,content_txt,media,email,authentication,firstname,lastname,authority,acct_stat,location,phone,finance_cd,up_time,initial_time,trsid\n"  # Modify this as per your column names
 
         # Write mode: 'w' for first time, 'a' for subsequent times
         with open(selected_file_path, 'r') as selected_file:
