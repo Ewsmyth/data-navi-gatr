@@ -114,7 +114,7 @@ class QueryPackage(tk.Frame):
 
         # Get the downloads directory
         
-        downloads_directory = os.path.join(os.getcwd(), "downloads")
+        downloads_directory = os.path.join(os.path.dirname(__file__), "downloads")
 
         # Check if the downloads directory exists
         if not os.path.exists(downloads_directory):
