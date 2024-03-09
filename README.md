@@ -19,7 +19,7 @@ sudo visudo
 ```
 ##### You can now exit out of you Ubuntu Server but you will want to keep cmd open
 ### Download and install Data Navi Gatr
-##### On the github page click the green dropdown button named "Code" and then click "Download ZIP". Once it is downloaded go ahead and right click on the zip file and extract the contents. Select a direcory where you want store the app, in this example I will be storing it in the C Drive.
+##### On the github page click the green dropdown button named **"Code"** and then click **"Download ZIP"**. Once it is downloaded go ahead and right click on the zip file and extract the contents. **Set the extract location to the C drive** (other wise you will have to copy the files to the C drive or change the commands below.).
 #### Install the necessary packages for the application.
 ##### First install Python 3.12, this can be found in the Microsoft store
 ##### Open CMD and type the following command:
@@ -28,7 +28,7 @@ pip install babel tkcalendar paramiko pyinstaller
 ```
 ##### Once those packages are installed use CMD to navigate to the directory where you saved the "Data Navi Gatr" folder.
 ```
-cd "C:\<path>\<to>\Data Navi Gatr"
+cd "C:\data-navi-gatr-main"
 ```
 ##### Once you are in the Data Navi Gatr folder run the following command:
 ```
