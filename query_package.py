@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from tkcalendar import DateEntry
 import os
 import csv
@@ -49,103 +49,47 @@ class QueryPackage(tk.Frame):
         submit_button.pack(pady=10)
 
     def submit_query(self):
-        # Get the date and time components from the entry widgets
-        start_date = self.start_date_entry.get_date()
-        start_time = self.start_time_entry.get()
-        end_date = self.end_date_entry.get_date()
-        end_time = self.end_time_entry.get()
+        # Prompt user to select a folder to save the filtered CSV file
+        folder_path = filedialog.askdirectory(title="Select Folder to Save CSV and Media Files")
 
-        # Combine date and time components to form datetime strings
-        start_datetime_str = f"{start_date} {start_time}"
-        end_datetime_str = f"{end_date} {end_time}"
+        # Get start and end datetime values from user input
+        start_datetime = datetime.combine(self.start_date_entry.get_date(), 
+                                           datetime.strptime(self.start_time_entry.get(), "%H:%M:%S").time())
+        end_datetime = datetime.combine(self.end_date_entry.get_date(),
+                                         datetime.strptime(self.end_time_entry.get(), "%H:%M:%S").time())
 
-        # Convert start and end date/time strings to datetime objects
-        start_datetime = datetime.strptime(start_datetime_str, "%Y-%m-%d %H:%M:%S")
-        end_datetime = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M:%S")
-
-        print("Start Datetime:", start_datetime)
-        print("End Datetime:", end_datetime)
-
-        # Open file dialog to select the folder for saving the filtered database file
-        save_folder = filedialog.askdirectory()
-        if not save_folder:
-            return  # User canceled operation
-
-        print("Selected folder:", save_folder)
-
-        # Print current working directory
-        print("Current working directory:", os.getcwd())
-
-        # Get path to the master_database.csv file
-        database_folder = os.path.join(os.getcwd(), "database")
-        master_database_path = os.path.join(database_folder, "master_database.csv")
-
-        print("Master database path:", master_database_path)
-
-        if not os.path.exists(master_database_path):
-            print("master_database.csv file not found.")
-            return
-
-        # Filter the data based on the datetime range
+        # Read master_database.csv and filter records based on datetime range
         filtered_rows = []
-        with open(master_database_path, 'r') as file:
-            reader = csv.reader(file)
-            header = next(reader)  # Read the header
+        with open("database/master_database.csv", "r") as file:
+            reader = csv.DictReader(file)
             for row in reader:
-                up_time_str = row[18]  # Assuming "up_time" is at index 20
-                if up_time_str:
-                    up_time = datetime.strptime(up_time_str, "%Y-%m-%d %H:%M:%S.%f")
-                    if start_datetime <= up_time <= end_datetime:
-                        filtered_rows.append(row)
-                else:
-                    continue
+                row_datetime = datetime.strptime(row["up_time"], "%Y-%m-%d %H:%M:%S")
+                if start_datetime <= row_datetime <= end_datetime:
+                    filtered_rows.append(row)
 
-        # Save the filtered data to a new master_database_filtered.csv file in the selected folder
-        filtered_master_database_path = os.path.join(save_folder, "master_database_filtered.csv")
-        with open(filtered_master_database_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(header)  # Write the header
+        # Write filtered rows to a new CSV file in the selected folder
+        output_file_path = os.path.join(folder_path, "filtered_data.csv")
+        with open(output_file_path, "w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=filtered_rows[0].keys())
+            writer.writeheader()
             writer.writerows(filtered_rows)
 
-        print("Filtered data saved successfully.")
+        # Create a 'media' folder within the selected folder
+        media_folder_path = os.path.join(folder_path, "media")
+        os.makedirs(media_folder_path, exist_ok=True)
 
-        media_column_index = header.index("media")
-        media_files = [row[media_column_index] for row in filtered_rows]
+        # Copy media files referenced in the 'media' field to the 'media' folder
+        for row in filtered_rows:
+            media_files = row.get("media")
+            if media_files:
+                # Split media field by comma, ignoring spaces
+                media_files = [filename.strip() for filename in media_files.split(",")]
+                for media_file in media_files:
+                    if media_file.startswith('"') and media_file.endswith('"'):
+                        media_file = media_file[1:-1]  # Remove quotes if present
+                    media_file_path = os.path.join("downloads", media_file)
+                    if os.path.exists(media_file_path):
+                        shutil.copy(media_file_path, media_folder_path)
 
-        # Get the downloads directory
-        
-        downloads_directory = os.path.join(os.path.dirname(__file__), "downloads")
-
-        # Check if the downloads directory exists
-        if not os.path.exists(downloads_directory):
-            print("Downloads directory does not exist.")
-            return  # Exit the function or display a message in the GUI
-
-        # Iterate through the extracted file names
-        for media_file in media_files:
-            # Split the media field by comma to extract individual filenames
-            file_names = [f.strip() for f in media_file.split(",") if f.strip()]
-            for file_name in file_names:
-                # Construct the full path of the file in the downloads directory
-                file_path = os.path.join(downloads_directory, file_name)
-
-                print("File path:", file_path)  # Debugging statement
-
-                if os.path.exists(file_path):
-                    try:
-                        # Copy the file to the selected directory
-                        shutil.copy(file_path, save_folder)
-                        print(f"File '{file_name}' copied successfully.")
-                    except PermissionError:
-                        print(f"Permission denied to copy file '{file_name}' to '{save_folder}'.")
-                else:
-                    print(f"File '{file_name}' does not exist at '{file_path}'.")
-
-        print("All files copied successfully.")
-
-# Sample usage
-if __name__ == "__main__":
-    root = tk.Tk()
-    query_package = QueryPackage(root)
-    query_package.pack(expand=True, fill="both")
-    root.mainloop()
+        # Inform the user that the operation is complete
+        messagebox.showinfo("Success", "Filtered data and media files have been saved.")
